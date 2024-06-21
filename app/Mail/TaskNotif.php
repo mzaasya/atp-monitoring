@@ -20,6 +20,9 @@ class TaskNotif extends Mailable
      */
     public function __construct(
         public Task $task,
+        public string $object,
+        public string $header,
+        public string $footer,
     ) {
     }
 
@@ -29,7 +32,7 @@ class TaskNotif extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'ATP Inviting',
+            subject: 'ATP Monitoring Notification',
         );
     }
 
@@ -39,7 +42,7 @@ class TaskNotif extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.task-inviting',
+            view: 'emails.task-notif',
         );
     }
 

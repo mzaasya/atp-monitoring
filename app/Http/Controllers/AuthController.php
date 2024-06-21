@@ -7,10 +7,18 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Yajra\DataTables\Facades\DataTables;
 
 class AuthController extends Controller
 {
+    protected $oneSignalUrl;
+
+    public function __construct()
+    {
+        $this->oneSignalUrl = env('ONESIGNAL_URL') . '/apps/' . env('ONESIGNAL_APP_ID');
+    }
+
     public function login()
     {
         if (Auth::check()) {
@@ -42,6 +50,7 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
+            $this->oneSignalCheckUser(Auth::user());
             return redirect('/');
         }
 
@@ -78,16 +87,16 @@ class AuthController extends Controller
     public function saveUser(Request $request): RedirectResponse
     {
         $data = $request->all();
-        $user = new User;
+        $id = $data['id'];
+        unset($data['id']);
+
         $validation = [
             'name' => 'required',
             'email' => 'required',
             'role' => 'required',
         ];
 
-        if ($data['id']) {
-            $user = User::find($data['id']);
-        } else {
+        if (!$id) {
             $validation['email'] = 'required|unique:users,email';
             $validation['password'] = 'required|min:6';
         }
@@ -98,20 +107,87 @@ class AuthController extends Controller
             $data['password'] = Hash::make($data['password']);
         }
 
-        $user->name = $data['name'];
-        $user->email = $data['email'];
-        $user->role = $data['role'];
-        if ($data['password']) {
-            $user->password = $data['password'];
+        if ($id) {
+            $user = User::find($id);
+            $user->name = $data['name'];
+            $user->email = $data['email'];
+            $user->role = $data['role'];
+            if ($data['password']) {
+                $user->password = $data['password'];
+            }
+            $user->save();
+        } else {
+            $user = User::create($data);
         }
-        $user->save();
 
-        return redirect('/user')->with('status', 'User ' . $data['name'] . ($data['id'] ? ' updated.' : ' created.'));
+        $this->oneSignalCheckUser($user);
+
+        return redirect('/user')->with('status', 'User ' . $data['name'] . ($id ? ' updated.' : ' created.'));
     }
 
     public function deleteUser($id)
     {
         User::find($id)->delete();
+        $this->oneSignalDeleteUser($id);
         return redirect('/user')->with('status', 'User deleted.');
+    }
+
+    private function oneSignalViewUser($id)
+    {
+        $path = '/users/by/external_id/user-' . $id;
+        return Http::get($this->oneSignalUrl . $path);
+    }
+
+    private function oneSignalCreateUser(User $user)
+    {
+        $path = '/users';
+        return Http::post($this->oneSignalUrl . $path, [
+            'identity' => [
+                'external_id' => 'user-' . $user->id
+            ],
+            'subscriptions' => [
+                [
+                    'type' => 'Email',
+                    'token' => $user->email
+                ]
+            ]
+        ]);
+    }
+
+    private function oneSignalDeleteUser($id)
+    {
+        $viewUser = $this->oneSignalViewUser($id);
+        if ($viewUser->status() === 200) {
+            $path = '/users/by/external_id/user-' . $id;
+            return Http::delete($this->oneSignalUrl . $path);
+        }
+        return false;
+    }
+
+    private function oneSignalUpdateSubscription($id, $data)
+    {
+        $path = '/subscriptions/' . $id;
+        return Http::patch($this->oneSignalUrl . $path, [
+            'subscription' => $data
+        ]);
+    }
+
+    private function oneSignalCheckUser(User $user)
+    {
+        $viewUser = $this->oneSignalViewUser($user->id);
+        if ($viewUser->status() === 200) {
+            $subscriptions = $viewUser->json()['subscriptions'];
+            $i = array_search('Email', array_column($subscriptions, 'type'));
+            if ($i !== false) {
+                $sub = $subscriptions[$i];
+                if ($sub['token'] === $user->email) {
+                    $dataUpdate = ['token' => $user->email];
+                    $this->oneSignalUpdateSubscription($sub['id'], $dataUpdate);
+                }
+            }
+        } else if ($viewUser->status() === 404) {
+            $this->oneSignalCreateUser($user);
+        }
+        return true;
     }
 }

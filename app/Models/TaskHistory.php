@@ -16,6 +16,8 @@ class TaskHistory extends Model
         'task_id',
         'user_id',
         'status',
+        'note',
+        'file',
     ];
 
     public function task(): BelongsTo

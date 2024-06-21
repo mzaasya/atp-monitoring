@@ -78,9 +78,10 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="mb-3 row">
-                        <label class="col-md-4 col-form-label">Note</label>
+                        <label class="col-md-4 col-form-label">File</label>
                         <div class="col-md-8">
-                            <input type="text" readonly class="form-control-plaintext" value="{{ $task->note }}">
+                            <a href="{{ url('/download-atp/' . $task->id) }}" class="btn btn-sm btn-primary">Download
+                                file</a>
                         </div>
                     </div>
                 </div>
@@ -94,10 +95,9 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="mb-3 row">
-                        <label class="col-md-4 col-form-label">File</label>
+                        <label class="col-md-4 col-form-label">Note</label>
                         <div class="col-md-8">
-                            <a href="{{ url('/download-atp/' . $task->id) }}" class="btn btn-sm btn-primary">Download
-                                file</a>
+                            <input type="text" readonly class="form-control-plaintext" value="{{ $task->note }}">
                         </div>
                     </div>
                 </div>
@@ -109,6 +109,8 @@
                 <thead>
                     <tr>
                         <th>Name</th>
+                        <th>Note</th>
+                        <th>File</th>
                         <th>Status</th>
                         <th>Time</th>
                     </tr>
@@ -117,6 +119,15 @@
                     @foreach ($task->histories as $history)
                         <tr>
                             <td>{{ $history->user->name }}</td>
+                            <td>{{ $history->note ?? '-' }}</td>
+                            <td>
+                                @if ($history->file)
+                                    <a href="{{ url('/download-history/' . $history->id) }}"
+                                        class="btn btn-sm btn-primary">Download file</a>
+                                @else
+                                    -
+                                @endif
+                            </td>
                             <td>
                                 <span class="badge rounded-pill {{ $history->badge_class }} p-2">
                                     {{ $history->status }}

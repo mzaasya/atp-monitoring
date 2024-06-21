@@ -2,23 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\TaskConfirmed;
-use App\Mail\TaskNotif;
-use App\Mail\TaskOnsite;
-use App\Mail\TaskRectified;
-use App\Mail\TaskRectify;
 use App\Models\Task;
 use App\Models\TaskHistory;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 
 class MainController extends Controller
 {
+    protected $oneSignalUrl;
+
+    public function __construct()
+    {
+        $this->oneSignalUrl = 'https://onesignal.com/api/v1/notifications';
+    }
+
     public function board()
     {
         $labels = [];
@@ -128,11 +131,11 @@ class MainController extends Controller
         }
 
         $task->status = strtoupper($task->status);
-        $task->badge_class = $this->_statusBadge($task->status);
+        $task->badge_class = $this->statusBadge($task->status);
 
         foreach ($task->histories as $history) {
             $history->status = strtoupper($history->status);
-            $history->badge_class = $this->_statusBadge($history->status);
+            $history->badge_class = $this->statusBadge($history->status);
         }
 
         return view('detail-atp', ['task' => $task]);
@@ -193,18 +196,33 @@ class MainController extends Controller
 
         $savedTask = Task::updateOrCreate(['id' => $task ? $task->id : 0], $data);
         if ($savedTask) {
+            $emailIds = [];
             $admins = User::where('role', '=', 'admin')->get();
+            foreach ($admins as $admin) {
+                $emailIds[] = 'user-' . $admin->id;
+            }
             if (!$task) {
                 TaskHistory::create([
                     'task_id' => $savedTask->id,
                     'user_id' => $savedTask->user_id,
                     'status' => $savedTask->status,
                 ]);
-                $mailTask = Task::with('user')->find($savedTask->id);
-                Mail::to($admins)->send(new TaskNotif($mailTask));
+                if (count($emailIds) > 0) {
+                    $emailData = $this->statusEmail($savedTask->status);
+                    $emailData['task'] = Task::with('user')->find($savedTask->id);
+                    $emailData['task']->inviting_date = $this->dateFormat($emailData['task']->inviting_date);
+                    $this->oneSignalNotifications($emailIds, $emailData);
+                }
+                // Mail::to($admins)->send(new TaskNotif($mailTask, $mailObject, $mailHeader, $mailFooter));
             } else {
                 if ($task->status === 'rectification') {
-                    Mail::to($admins)->send(new TaskRectified($task));
+                    if (count($emailIds) > 0) {
+                        $emailData = $this->statusEmail('rectified');
+                        $emailData['task'] = $task;
+                        $emailData['task']->inviting_date = $this->dateFormat($emailData['task']->inviting_date);
+                        $this->oneSignalNotifications($emailIds, $emailData);
+                    }
+                    // Mail::to($admins)->send(new TaskNotif($task, $mailObject, $mailHeader, $mailFooter));
                 }
             }
             return redirect('/atp')->with('status', 'ATP ' . $data['sonumb'] . ($task ? ' updated.' : ' created.'));
@@ -215,10 +233,82 @@ class MainController extends Controller
         ])->withInput();
     }
 
+    public function status(Request $request)
+    {
+        $data = $request->all();
+
+        if (
+            !$data['id'] ||
+            !$data['status']
+        ) {
+            return back();
+        }
+
+        $task = Task::with('user')->find($data['id']);
+
+        if (!$task) {
+            return back();
+        }
+
+        if ($data['atp_date']) {
+            $task->atp_date = $data['atp_date'];
+        }
+
+        $task->status = $data['status'];
+        $task->save();
+
+        $dataHistory = [
+            'task_id' => $task->id,
+            'user_id' => Auth::id(),
+            'status' => $data['status'],
+        ];
+
+        if ($data['note']) {
+            $dataHistory['note'] = $data['note'];
+        }
+
+        if (
+            $request->hasFile('file') &&
+            $request->file('file')->isValid()
+        ) {
+            $filename = uniqid() . '.' . $request->file('file')->extension();
+            $request->file('file')->storeAs('upload', $filename);
+            $dataHistory['file'] = $filename;
+        }
+
+        TaskHistory::create($dataHistory);
+
+        $emailData = $this->statusEmail($data['status']);
+        $emailData['task'] = $task;
+        $emailData['task']->inviting_date = $this->dateFormat($emailData['task']->inviting_date);
+        $emailIds = [];
+
+        if ($emailData['object'] === 'Vendor') {
+            $emailIds[] = 'user-' . $task->user->id;
+        } else if ($emailData['object'] === 'CME') {
+            $admins = User::where('role', '=', 'admin')->get();
+            foreach ($admins as $admin) {
+                $emailIds[] = 'user-' . $admin->id;
+            }
+        }
+
+        if (count($emailIds) > 0) {
+            $this->oneSignalNotifications($emailIds, $emailData);
+        }
+
+        return redirect('/atp')->with('status', 'ATP status changed to ' . $data['status']);
+    }
+
     public function downloadAtp($id)
     {
         $task = Task::find($id);
         return Storage::download('upload/' . $task->file);
+    }
+
+    public function downloadHistory($id)
+    {
+        $history = TaskHistory::find($id);
+        return Storage::download('upload/' . $history->file);
     }
 
     public function deleteAtp($id)
@@ -228,95 +318,25 @@ class MainController extends Controller
         return redirect('/atp')->with('status', 'ATP deleted');
     }
 
-    public function confirmAtp($id, $date)
+    private function oneSignalNotifications($ids, $data)
     {
-        $task = Task::find($id);
-        $task->atp_date = $date;
-        $task->status = 'confirmation';
-        $task->save();
-
-        $savedHistory = TaskHistory::create([
-            'task_id' => $task->id,
-            'user_id' => Auth::id(),
-            'status' => 'confirmation',
+        return Http::withToken(env('ONESIGNAL_REST_API_KEY'))->post($this->oneSignalUrl, [
+            'app_id' => env('ONESIGNAL_APP_ID'),
+            'template_id' => env('ONESIGNAL_TEMPLATE_ID'),
+            'channel_for_external_user_ids' => 'email',
+            'include_external_user_ids' => $ids,
+            'custom_data' => $data
         ]);
-
-        $history = TaskHistory::with(['user', 'task.user'])->find($savedHistory->id);
-        Mail::to($history->task->user)->send(new TaskConfirmed($history));
-
-        return redirect('/atp')->with('status', 'ATP confirmed');
     }
 
-    public function onsiteAtp($id)
+    private function dateFormat($date)
     {
-        $task = Task::find($id);
-        $task->status = 'on site';
-        $task->save();
-
-        $savedHistory = TaskHistory::create([
-            'task_id' => $task->id,
-            'user_id' => Auth::id(),
-            'status' => 'on site',
-        ]);
-
-        $history = TaskHistory::with(['user', 'task.user'])->find($savedHistory->id);
-        Mail::to($history->task->user)->send(new TaskOnsite($history));
-
-        return redirect('/atp')->with('status', 'ATP on site');
+        $formatted = Carbon::parse($date);
+        $formatted->locale('id');
+        return $formatted->isoFormat('dddd, D MMMM Y');
     }
 
-    public function rectifyAtp($id, $note)
-    {
-        $task = Task::find($id);
-        if ($note) {
-            $task->note = $note;
-        }
-        $task->status = 'rectification';
-        $task->save();
-
-        $savedHistory = TaskHistory::create([
-            'task_id' => $task->id,
-            'user_id' => Auth::id(),
-            'status' => 'rectification',
-        ]);
-
-        $history = TaskHistory::with(['user', 'task.user'])->find($savedHistory->id);
-        Mail::to($history->task->user)->send(new TaskRectify($history));
-
-        return redirect('/atp')->with('status', 'ATP rectified');
-    }
-
-    public function systemAtp($id)
-    {
-        $task = Task::find($id);
-        $task->status = 'system';
-        $task->save();
-
-        TaskHistory::create([
-            'task_id' => $task->id,
-            'user_id' => Auth::id(),
-            'status' => 'system',
-        ]);
-
-        return redirect('/atp')->with('status', 'ATP system');
-    }
-
-    public function doneAtp($id)
-    {
-        $task = Task::find($id);
-        $task->status = 'done';
-        $task->save();
-
-        TaskHistory::create([
-            'task_id' => $task->id,
-            'user_id' => Auth::id(),
-            'status' => 'done',
-        ]);
-
-        return redirect('/atp')->with('status', 'ATP done');
-    }
-
-    private function _statusBadge($status)
+    private function statusBadge($status)
     {
         $badge = '';
         switch ($status) {
@@ -340,5 +360,54 @@ class MainController extends Controller
                 break;
         }
         return $badge;
+    }
+
+    private function statusEmail($status)
+    {
+        $data = [
+            'object' => '',
+            'header' => '',
+            'footer' => '',
+        ];
+
+        switch ($status) {
+            case 'invitation':
+                $data['object'] = 'CME';
+                $data['header'] = 'undangan ATP (Inviting ATP), berikut :';
+                $data['footer'] = 'Mohon dibantu konfirmasi untuk ATP site berikut';
+                break;
+            case 'confirmation':
+                $data['object'] = 'Vendor';
+                $data['header'] = 'konfirmasi ATP (Confirmation ATP), berikut :';
+                $data['footer'] = 'Mohon disiapkan semua keperluan ketika ATP on site';
+                break;
+            case 'on site':
+                $data['object'] = 'Vendor';
+                $data['header'] = 'konfirmasi ATP on site, berikut :';
+                $data['footer'] = 'Mohon disiapkan semua keperluan saat ATP on site';
+                break;
+            case 'rectification':
+                $data['object'] = 'Vendor';
+                $data['header'] = 'rektifikasi ATP (Rectification ATP), berikut :';
+                $data['footer'] = 'Mohon dilakukan perbaikan selambatnya H+3 setelah ATP on site';
+                break;
+            case 'rectified':
+                $data['object'] = 'CME';
+                $data['header'] = 'rektifikasi ATP (Rectification ATP) berikut telah diperbaiki';
+                $data['footer'] = 'Mohon dilakukan pemeriksaan ATP yang telah diperbaiki';
+                break;
+            case 'system':
+                $data['object'] = 'Vendor';
+                $data['header'] = 'ATP site berikut diterima';
+                $data['footer'] = 'Mohon dilakukan input system sesuai dengan format yang telah disetujui';
+                break;
+            case 'done':
+                $data['object'] = 'Vendor';
+                $data['header'] = 'ATP site berikut telah selesai';
+                $data['footer'] = 'Terimakasih telah melakukan serangkaian kegiatan ATP dengan memperhatikan keselamatan kerja';
+                break;
+        }
+
+        return $data;
     }
 }

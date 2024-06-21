@@ -129,13 +129,13 @@
                                                                 <p style="font-size: 14px; line-height: 130%;">
                                                                     <strong><span
                                                                             style="font-size: 16px; line-height: 20.8px;">Dear
-                                                                            CME Team,</span></strong>
+                                                                            {{ $object }} Team,</span></strong>
                                                                 </p>
                                                                 <p style="font-size: 14px; line-height: 130%;"> </p>
                                                                 <p style="font-size: 14px; line-height: 130%;"><span
                                                                         style="font-size: 16px; line-height: 20.8px; font-family: Lato, sans-serif;">Bersama
-                                                                        ini kami sampaikan undangan ATP (Inviting ATP),
-                                                                        berikut :</span></p>
+                                                                        ini kami sampaikan {{ $header }}</span>
+                                                                </p>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -264,9 +264,8 @@
                                                                 style="font-size: 14px; color: #333333; line-height: 160%; text-align: left; word-wrap: break-word;">
                                                                 <p style="line-height: 160%;"><span
                                                                         style="font-family: Lato, sans-serif;"><span
-                                                                            style="font-size: 16px; line-height: 25.6px;">Mohon
-                                                                            dibantu konfirmasi untuk ATP Site
-                                                                            berikut.</span></span></p>
+                                                                            style="font-size: 16px; line-height: 25.6px;">{{ $footer }}.</span></span>
+                                                                </p>
                                                             </div>
                                                         </td>
                                                     </tr>

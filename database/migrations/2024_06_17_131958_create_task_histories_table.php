@@ -16,6 +16,8 @@ return new class extends Migration
             $table->integer('task_id');
             $table->bigInteger('user_id');
             $table->string('status');
+            $table->string('note')->nullable();
+            $table->string('file')->nullable();
             $table->timestamps();
         });
     }

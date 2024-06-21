@@ -17,7 +17,8 @@
                         <div class="form-group mb-3">
                             <label for="sonumb" class="form-label">SO Number</label>
                             <input type="text" class="form-control @error('sonumb') is-invalid @enderror" id="sonumb"
-                                name="sonumb" value="{{ $task ? $task->sonumb : old('sonumb') }}" required>
+                                name="sonumb" value="{{ $task ? $task->sonumb : old('sonumb') }}" required
+                                {{ $task && $task->status === 'rectification' ? 'readonly' : '' }}>
                             @error('sonumb')
                                 <small class="text-danger">Sudah ada data dengan SO Number tersebut.</small>
                             @enderror
@@ -28,7 +29,8 @@
                             <label for="inviting_date" class="form-label">Inviting Date</label>
                             <input type="date" class="form-control @error('inviting_date') is-invalid @enderror"
                                 id="inviting_date" name="inviting_date"
-                                value="{{ $task ? $task->inviting_date : old('inviting_date') }}" required>
+                                value="{{ $task ? $task->inviting_date : old('inviting_date') }}" required
+                                {{ $task && $task->status === 'rectification' ? 'readonly' : '' }}>
                         </div>
                     </div>
                     <div class="col-lg-6">
@@ -36,14 +38,15 @@
                             <label for="site_name" class="form-label">Site Name</label>
                             <input type="text" class="form-control @error('site_name') is-invalid @enderror"
                                 id="site_name" name="site_name" value="{{ $task ? $task->site_name : old('site_name') }}"
-                                required>
+                                required {{ $task && $task->status === 'rectification' ? 'readonly' : '' }}>
                         </div>
                     </div>
                     <div class="col-lg-6">
                         <div class="form-group mb-3">
                             <label for="site_id" class="form-label">Site ID</label>
                             <input type="text" class="form-control @error('site_id') is-invalid @enderror" id="site_id"
-                                name="site_id" value="{{ $task ? $task->site_id : old('site_id') }}" required>
+                                name="site_id" value="{{ $task ? $task->site_id : old('site_id') }}" required
+                                {{ $task && $task->status === 'rectification' ? 'readonly' : '' }}>
                         </div>
                     </div>
                     <div class="col-lg-6">
@@ -51,14 +54,15 @@
                             <label for="operator" class="form-label">Operator</label>
                             <input type="text" class="form-control @error('operator') is-invalid @enderror"
                                 id="operator" name="operator" value="{{ $task ? $task->operator : old('operator') }}"
-                                required>
+                                required {{ $task && $task->status === 'rectification' ? 'readonly' : '' }}>
                         </div>
                     </div>
                     <div class="col-lg-6">
                         <div class="form-group mb-3">
                             <label for="regency" class="form-label">Regency</label>
                             <input type="text" class="form-control @error('regency') is-invalid @enderror" id="regency"
-                                name="regency" value="{{ $task ? $task->regency : old('regency') }}" required>
+                                name="regency" value="{{ $task ? $task->regency : old('regency') }}" required
+                                {{ $task && $task->status === 'rectification' ? 'readonly' : '' }}>
                         </div>
                     </div>
                     <div class="col-lg-12">
@@ -79,7 +83,7 @@
                                     </div>
                                 @else
                                     <input type="file" class="form-control @error('file') is-invalid @enderror mb-1"
-                                        id="file" name="file"accept=".csv,.xls,.xlsx" required>
+                                        id="file" name="file" accept=".csv,.xls,.xlsx" required>
                                 @endif
                             </div>
                             <a href="javascript:void(0)" id="removeFile"><b>Remove File</b></a>
