@@ -56,7 +56,7 @@
                                     <i class="ti ti-article"></i>
                                 </span>
                                 <span class="hide-menu">ATP</span>
-                                @if (Auth::user()->role === 'admin' && $unconfirmed)
+                                {{-- @if (Auth::user()->role === 'admin' && $unconfirmed)
                                     <span class="badge rounded-pill bg-danger"
                                         style="font-size: 0.7rem;">{{ $unconfirmed }}</span>
                                 @else
@@ -64,7 +64,7 @@
                                         <span class="badge rounded-pill bg-danger"
                                             style="font-size: 0.7rem;">{{ $rectification }}</span>
                                     @endif
-                                @endif
+                                @endif --}}
                             </a>
                         </li>
                         @if (Auth::user()->role === 'admin')

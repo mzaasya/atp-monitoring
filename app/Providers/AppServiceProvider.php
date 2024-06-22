@@ -21,9 +21,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $invitation = Task::where('status', '=', 'invitation')->count();
-        $rectification = Task::where('status', '=', 'rectification')->count();
-        View::share('unconfirmed', $invitation);
-        View::share('rectification', $rectification);
+        // $invitation = Task::where('status', '=', 'invitation')->count();
+        // $rectification = Task::where('status', '=', 'rectification')->count();
+        // View::share('unconfirmed', $invitation);
+        // View::share('rectification', $rectification);
     }
 }
