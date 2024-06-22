@@ -1,12 +1,14 @@
+name: kertaskerja
 services:
     kertaskerja:
         build: .
+        image: kertaskerja
         container_name: kertaskerja
         restart: always
         ports:
-            - "80:8000"
-            # - "443:8000"
-            # - "443:443/udp"
+            - "80:80"
+            - "443:443"
+            - "443:443/udp"
         volumes:
             - caddy_data:/data
             - caddy_config:/config
