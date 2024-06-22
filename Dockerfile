@@ -1,9 +1,5 @@
 FROM dunglas/frankenphp
-
-RUN install-php-extensions \
-    pcntl
-# Add other PHP extensions here...
-
+ENV SERVER_NAME=kertaskerja-atp.com
+RUN install-php-extensions pcntl
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 COPY . /app
-
-ENTRYPOINT ["php", "artisan", "octane:frankenphp"]

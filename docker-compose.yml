@@ -1,9 +1,15 @@
 services:
-  frankenphp:
-    build:
-      context: .
-    entrypoint: php artisan octane:frankenphp --max-requests=1
+  kertaskerja:
+    build: .
+    restart: always
     ports:
-      - "8000:8000"
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
     volumes:
       - .:/app
+      - caddy_data:/data
+      - caddy_config:/config
+volumes:
+  caddy_data:
+  caddy_config:
