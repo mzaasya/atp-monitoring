@@ -2,5 +2,5 @@
 
 return [
     App\Providers\AppServiceProvider::class,
-    Laravel\Octane\OctaneServiceProvider::class,
+    // Laravel\Octane\OctaneServiceProvider::class,
 ];
