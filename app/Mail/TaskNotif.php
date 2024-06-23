@@ -32,7 +32,7 @@ class TaskNotif extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'ATP Monitoring Notification',
+            subject: 'Kertas Kerja ATP Notification',
         );
     }
 

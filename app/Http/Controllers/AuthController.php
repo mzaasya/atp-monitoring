@@ -115,12 +115,13 @@ class AuthController extends Controller
             if ($data['password']) {
                 $user->password = $data['password'];
             }
+            $this->oneSignalCheckUser($user);
             $user->save();
         } else {
             $user = User::create($data);
+            $this->oneSignalCheckUser($user);
         }
 
-        $this->oneSignalCheckUser($user);
 
         return redirect('/user')->with('status', 'User ' . $data['name'] . ($id ? ' updated.' : ' created.'));
     }

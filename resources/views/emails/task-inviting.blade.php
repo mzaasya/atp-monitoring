@@ -305,7 +305,7 @@
                                                             <div
                                                                 style="font-size: 14px; color: #828080; line-height: 140%; text-align: center; word-wrap: break-word;">
                                                                 <p style="font-size: 14px; line-height: 140%;">© 2024
-                                                                    ATP Monitoring. All Rights Reserved.</p>
+                                                                    Kertas Kerja ATP. All Rights Reserved.</p>
                                                             </div>
                                                         </td>
                                                     </tr>

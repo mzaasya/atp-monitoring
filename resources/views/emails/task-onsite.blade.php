@@ -24,7 +24,7 @@
         <p>Check it out now!</p>
         <br>
         <hr>
-        <small>By ATP Monitoring App</small>
+        <small>By Kertas Kerja ATP App</small>
     </div>
 
 </body>
