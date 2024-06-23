@@ -181,7 +181,7 @@ class AuthController extends Controller
             $i = array_search('Email', array_column($subscriptions, 'type'));
             if ($i !== false) {
                 $sub = $subscriptions[$i];
-                if ($sub['token'] === $user->email) {
+                if ($sub['token'] !== $user->email) {
                     $dataUpdate = ['token' => $user->email];
                     $this->oneSignalUpdateSubscription($sub['id'], $dataUpdate);
                 }
