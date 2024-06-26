@@ -47,7 +47,7 @@
                                                 Remember this Device
                                             </label>
                                         </div>
-                                        <a class="text-primary fw-bold" href="./index.html">Forgot Password ?</a>
+                                        {{-- <a class="text-primary fw-bold" href="./index.html">Forgot Password ?</a> --}}
                                     </div>
                                     <button type="submit" class="btn btn-primary w-100 py-8 fs-4 mb-4 rounded-2">Sign
                                         In</button>
