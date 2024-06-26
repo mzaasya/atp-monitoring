@@ -12,6 +12,7 @@
                         <h4>ATP List</h4>
                     </div>
                     <div class="card-body">
+                        <a href="{{ url('/form-atp/0') }}" class="btn btn-primary mb-2">Add Pre ATP</a>
                         <table id="table-atp" class="table table-hover" cellspacing="0" width="100%">
                             <thead>
                                 <tr>
@@ -244,31 +245,33 @@
                         name: 'status',
                         render: function(data, type, row) {
                             switch (data) {
+                                case 'pre atp':
+                                    data = '<span class="badge rounded-pill bg-info p-2">' +
+                                        data.toUpperCase() + '</span>';
+                                    break;
                                 case 'invitation':
                                     data = '<span class="badge rounded-pill bg-secondary p-2">' +
-                                        data
-                                        .toUpperCase() + '</span>';
+                                        data.toUpperCase() + '</span>';
                                     break;
                                 case 'confirmation':
-                                    data = '<span class="badge rounded-pill bg-primary p-2">' + data
-                                        .toUpperCase() + '</span>';
+                                    data = '<span class="badge rounded-pill bg-primary p-2">' +
+                                        data.toUpperCase() + '</span>';
                                     break;
                                 case 'on site':
-                                    data = '<span class="badge rounded-pill bg-warning p-2">' + data
-                                        .toUpperCase() + '</span>';
+                                    data = '<span class="badge rounded-pill bg-warning p-2">' +
+                                        data.toUpperCase() + '</span>';
                                     break;
                                 case 'rectification':
-                                    data = '<span class="badge rounded-pill bg-danger p-2">' + data
-                                        .toUpperCase() +
-                                        '</span>';
+                                    data = '<span class="badge rounded-pill bg-danger p-2">' +
+                                        data.toUpperCase() + '</span>';
                                     break;
                                 case 'system':
-                                    data = '<span class="badge rounded-pill bg-dark p-2">' + data
-                                        .toUpperCase() + '</span>';
+                                    data = '<span class="badge rounded-pill bg-dark p-2">' +
+                                        data.toUpperCase() + '</span>';
                                     break;
                                 case 'done':
-                                    data = '<span class="badge rounded-pill bg-success p-2">' + data
-                                        .toUpperCase() + '</span>';
+                                    data = '<span class="badge rounded-pill bg-success p-2">' +
+                                        data.toUpperCase() + '</span>';
                                     break;
                             }
                             return data;
@@ -293,6 +296,9 @@
                             } else if (row.status === 'system') {
                                 action +=
                                     `<button type="button" data-id="${row.id}"data-status="done" class="btn btn-sm btn-success btn-status mx-1">Done</button>`;
+                            } else if (row.status === 'pre atp') {
+                                action +=
+                                    `<a href="{{ url('/form-atp/${row.id}') }}" class="btn btn-sm btn-primary mx-1">Edit</a>`;
                             }
                             return action;
                         }

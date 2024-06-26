@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
@@ -122,15 +123,20 @@ class AuthController extends Controller
             $this->oneSignalCheckUser($user);
         }
 
-
-        return redirect('/user')->with('status', 'User ' . $data['name'] . ($id ? ' updated.' : ' created.'));
+        return redirect('/user')
+            ->with('message', 'User ' . $data['name'] . ($id ? ' updated.' : ' created.'))
+            ->with('status', 'success');
     }
 
     public function deleteUser($id)
     {
+        $task = Task::where('user_id', '=', $id)->first();
+        if ($task) {
+            return back()->with('message', 'cannot be deleted, this user has ATP.')->with('status', 'error');
+        }
         User::find($id)->delete();
         $this->oneSignalDeleteUser($id);
-        return redirect('/user')->with('status', 'User deleted.');
+        return redirect('/user')->with('message', 'User deleted.')->with('status', 'success');
     }
 
     private function oneSignalViewUser($id)

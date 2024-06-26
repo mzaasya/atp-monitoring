@@ -5,7 +5,8 @@
         <div class="row justify-content-center">
             <div class="col-md-12">
                 @if (session('status'))
-                    <div id="alert" data-alert='{{ session('status') }}' hidden></div>
+                    <div id="alert" data-message='{{ session('message') }}' data-status='{{ session('status') }}' hidden>
+                    </div>
                 @endif
                 <div class="card">
                     <div class="card-header">
@@ -45,11 +46,12 @@
                     toast.onmouseleave = Swal.resumeTimer;
                 }
             });
-            const alert = $('#alert').data('alert');
-            if (alert) {
+            const message = $('#alert').data('message');
+            const status = $('#alert').data('status');
+            if (message && status) {
                 Toast.fire({
-                    icon: "success",
-                    title: alert
+                    icon: status,
+                    title: message,
                 });
             }
 

@@ -65,7 +65,7 @@ $(function () {
       yaxis: {
         show: true,
         min: 0,
-        max: 50,
+        // max: 50,
         tickAmount: 4,
         labels: {
           style: {

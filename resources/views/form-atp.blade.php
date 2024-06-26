@@ -3,7 +3,8 @@
 @section('content')
     <div class="card shadow">
         <div class="card-header">
-            <h4>{{ $task ? 'Edit ATP ' . $task->sonumb : 'Add New ATP' }}</h4>
+            <h4>{{ $task ? 'Edit ATP ' . $task->sonumb : (Auth::user()->role === 'admin' ? 'Add Pre ATP' : 'Add New ATP') }}
+            </h4>
         </div>
         <div class="card-body">
             <form action="{{ url('/save-atp') }}" method="post" enctype="multipart/form-data" id="form-atp">
@@ -26,11 +27,23 @@
                     </div>
                     <div class="col-lg-6">
                         <div class="form-group mb-3">
-                            <label for="inviting_date" class="form-label">Inviting Date</label>
-                            <input type="date" class="form-control @error('inviting_date') is-invalid @enderror"
-                                id="inviting_date" name="inviting_date"
-                                value="{{ $task ? $task->inviting_date : old('inviting_date') }}" required
-                                {{ $task && $task->status === 'rectification' ? 'readonly' : '' }}>
+                            @if (Auth::user()->role === 'admin')
+                                <label for="user_id" class="form-label">For Member</label>
+                                <select name="user_id" id="user_id"
+                                    class="form-select @error('user_id') is-invalid @enderror">
+                                    @foreach ($members as $member)
+                                        <option value="{{ $member->id }}"
+                                            {{ $task && $task->user_id === $member->id ? 'selected' : '' }}>
+                                            {{ $member->name }}</option>
+                                    @endforeach
+                                </select>
+                            @else
+                                <label for="inviting_date" class="form-label">Inviting Date</label>
+                                <input type="date" class="form-control @error('inviting_date') is-invalid @enderror"
+                                    id="inviting_date" name="inviting_date"
+                                    value="{{ $task ? $task->inviting_date : old('inviting_date') }}" required
+                                    {{ $task && $task->status === 'rectification' ? 'readonly' : '' }}>
+                            @endif
                         </div>
                     </div>
                     <div class="col-lg-6">
@@ -59,13 +72,22 @@
                     </div>
                     <div class="col-lg-6">
                         <div class="form-group mb-3">
+                            <label for="tower_type" class="form-label">Tower Type</label>
+                            <input type="text" class="form-control @error('tower_type') is-invalid @enderror"
+                                id="tower_type" name="tower_type"
+                                value="{{ $task ? $task->tower_type : old('tower_type') }}" required
+                                {{ $task && $task->status === 'rectification' ? 'readonly' : '' }}>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="form-group mb-3">
                             <label for="regency" class="form-label">Regency</label>
                             <input type="text" class="form-control @error('regency') is-invalid @enderror" id="regency"
                                 name="regency" value="{{ $task ? $task->regency : old('regency') }}" required
                                 {{ $task && $task->status === 'rectification' ? 'readonly' : '' }}>
                         </div>
                     </div>
-                    <div class="col-lg-12">
+                    <div class="col-lg-6">
                         <div class="form-group mb-3">
                             <label for="note" class="form-label">Note</label>
                             <input type="text" class="form-control @error('note') is-invalid @enderror" id="note"

@@ -18,6 +18,7 @@ class Task extends Model
         'site_name',
         'site_id',
         'operator',
+        'tower_type',
         'regency',
         'inviting_date',
         'atp_date',

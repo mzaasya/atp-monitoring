@@ -111,6 +111,7 @@ class MainController extends Controller
     public function formAtp($id)
     {
         $data = ['task' => null];
+        $data['members'] = User::where('role', '=', 'member')->get();
 
         if ($id) {
             $data['task'] = Task::find($id);
@@ -144,6 +145,7 @@ class MainController extends Controller
     public function saveAtp(Request $request): RedirectResponse
     {
         $data = $request->all();
+        $user = Auth::user();
         $task = null;
         $validation = [
             'sonumb' => 'required',
@@ -151,15 +153,24 @@ class MainController extends Controller
             'site_id' => 'required',
             'operator' => 'required',
             'regency' => 'required',
-            'file' => 'required',
         ];
+
+        if ($user->role === 'admin') {
+            $validation['user_id'] = 'required';
+        } else {
+            $validation['file'] = 'required';
+        }
 
         if ($data['id']) {
             $task = Task::with('user')->find($data['id']);
         } else {
             $validation['sonumb'] = 'required|unique:tasks,sonumb';
-            $data['user_id'] = Auth::id();
-            $data['status'] = 'invitation';
+            if ($user->role === 'admin') {
+                $data['status'] = 'pre atp';
+            } else {
+                $data['user_id'] = Auth::id();
+                $data['status'] = 'invitation';
+            }
         }
 
         $request->validate($validation);
@@ -207,7 +218,10 @@ class MainController extends Controller
                     'user_id' => $savedTask->user_id,
                     'status' => $savedTask->status,
                 ]);
-                if (count($emailIds) > 0) {
+                if (
+                    count($emailIds) > 0 &&
+                    $data['status'] === 'invitation'
+                ) {
                     $emailData = $this->statusEmail($savedTask->status);
                     $emailData['task'] = Task::with('user')->find($savedTask->id);
                     $emailData['task']->inviting_date = $this->dateFormat($emailData['task']->inviting_date);
@@ -284,7 +298,9 @@ class MainController extends Controller
         $emailIds = [];
 
         if ($emailData['object'] === 'Vendor') {
-            $emailIds[] = 'user-' . $task->user->id;
+            if ($task->user) {
+                $emailIds[] = 'user-' . $task->user->id;
+            }
         } else if ($emailData['object'] === 'CME') {
             $admins = User::where('role', '=', 'admin')->get();
             foreach ($admins as $admin) {
@@ -340,6 +356,9 @@ class MainController extends Controller
     {
         $badge = '';
         switch ($status) {
+            case 'PRE ATP':
+                $badge = 'bg-info';
+                break;
             case 'INVITATION':
                 $badge = 'bg-secondary';
                 break;

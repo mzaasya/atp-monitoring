@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('site_name');
             $table->string('site_id');
             $table->string('operator');
+            $table->string('tower_type');
             $table->string('regency');
             $table->date('inviting_date');
             $table->date('atp_date')->nullable();

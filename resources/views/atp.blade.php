@@ -120,31 +120,33 @@
                         name: 'status',
                         render: function(data, type, row) {
                             switch (data) {
+                                case 'pre atp':
+                                    data = '<span class="badge rounded-pill bg-info p-2">' +
+                                        data.toUpperCase() + '</span>';
+                                    break;
                                 case 'invitation':
                                     data = '<span class="badge rounded-pill bg-secondary p-2">' +
-                                        data
-                                        .toUpperCase() + '</span>';
+                                        data.toUpperCase() + '</span>';
                                     break;
                                 case 'confirmation':
-                                    data = '<span class="badge rounded-pill bg-primary p-2">' + data
-                                        .toUpperCase() + '</span>';
+                                    data = '<span class="badge rounded-pill bg-primary p-2">' +
+                                        data.toUpperCase() + '</span>';
                                     break;
                                 case 'on site':
-                                    data = '<span class="badge rounded-pill bg-warning p-2">' + data
-                                        .toUpperCase() + '</span>';
+                                    data = '<span class="badge rounded-pill bg-warning p-2">' +
+                                        data.toUpperCase() + '</span>';
                                     break;
                                 case 'rectification':
-                                    data = '<span class="badge rounded-pill bg-danger p-2">' + data
-                                        .toUpperCase() +
-                                        '</span>';
+                                    data = '<span class="badge rounded-pill bg-danger p-2">' +
+                                        data.toUpperCase() + '</span>';
                                     break;
                                 case 'system':
-                                    data = '<span class="badge rounded-pill bg-dark p-2">' + data
-                                        .toUpperCase() + '</span>';
+                                    data = '<span class="badge rounded-pill bg-dark p-2">' +
+                                        data.toUpperCase() + '</span>';
                                     break;
                                 case 'done':
-                                    data = '<span class="badge rounded-pill bg-success p-2">' + data
-                                        .toUpperCase() + '</span>';
+                                    data = '<span class="badge rounded-pill bg-success p-2">' +
+                                        data.toUpperCase() + '</span>';
                                     break;
                             }
                             return data;
