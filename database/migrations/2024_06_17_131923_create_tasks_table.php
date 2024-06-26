@@ -17,11 +17,11 @@ return new class extends Migration
             $table->string('site_name');
             $table->string('site_id');
             $table->string('operator');
-            $table->string('tower_type');
+            $table->string('tower_type')->nullable();
             $table->string('regency');
-            $table->date('inviting_date');
+            $table->date('inviting_date')->nullable();
             $table->date('atp_date')->nullable();
-            $table->string('file');
+            $table->string('file')->nullable();
             $table->string('note')->nullable();
             $table->string('status')->default('invitation');
             $table->bigInteger('user_id');
